@@ -1,2 +1,16 @@
-# Temporal files from QtCreator
+# QtCreator project files
 CMakeLists.txt.user
+
+# Cmake files
+**/CMakeFiles
+**/CMakeCache.txt
+**/Makefile
+*.cmake
+
+
+# Vim cache
+*.un~
+*.swp
+
+# Build directory
+build
