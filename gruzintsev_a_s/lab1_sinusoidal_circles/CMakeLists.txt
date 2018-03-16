@@ -5,8 +5,8 @@ project(lab1_sinusoidal_circles)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(lab1 lab1_sinusoidal_circles.cpp)
-target_link_libraries(lab1 ${OpenCV_LIBS})
+add_executable(lab1.bin lab1_sinusoidal_circles.cpp)
+target_link_libraries(lab1.bin ${OpenCV_LIBS})
 
 
 

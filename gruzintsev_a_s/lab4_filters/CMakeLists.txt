@@ -5,6 +5,6 @@ project(lab4_filters)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(lab4 lab4_filters.cpp)
-target_link_libraries(lab4 ${OpenCV_LIBS})
+add_executable(lab4.bin lab4_filters.cpp)
+target_link_libraries(lab4.bin ${OpenCV_LIBS})
 

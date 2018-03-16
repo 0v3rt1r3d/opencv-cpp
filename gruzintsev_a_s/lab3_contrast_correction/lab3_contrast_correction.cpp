@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-    Mat image = imread("/home/overtired/Desktop/pictures/girl.png");
+    Mat image = imread("../pictures/girl.png");
 
     std::cout << "channels = " << image.channels() << std::endl;
 

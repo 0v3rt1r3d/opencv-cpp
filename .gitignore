@@ -12,5 +12,7 @@ CMakeLists.txt.user
 *.un~
 *.swp
 
-# Build directory
+# Build
 build
+bin.unix64.gcc/
+

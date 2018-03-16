@@ -21,7 +21,7 @@ int main()
 
     imshow("SINPIC", m);
     waitKey(0);
-    imwrite("/home/overtired/Desktop/pictures/picture_waves.png", m);
+    imwrite("../pictures/picture_waves.png", m);
     
     return 0;
 }

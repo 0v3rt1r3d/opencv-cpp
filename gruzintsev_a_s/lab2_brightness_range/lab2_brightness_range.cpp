@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-    Mat m = imread("/home/overtired/Desktop/pictures/27816.jpg", COLOR_BGR2HLS);
+    Mat m = imread("../pictures/27816.jpg", COLOR_BGR2HLS);
     vector<Mat> channels;
     split(m, channels);
     

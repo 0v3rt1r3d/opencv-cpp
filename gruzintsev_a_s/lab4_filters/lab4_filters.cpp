@@ -8,7 +8,7 @@ using namespace std;
 
 int main()
 {
-    Mat image = imread("/home/overtired/Desktop/pictures/girl.png", CV_BGR2GRAY);
+    Mat image = imread("../pictures/girl.png", CV_BGR2GRAY);
 
     Mat destinationImage;
     Mat box;
