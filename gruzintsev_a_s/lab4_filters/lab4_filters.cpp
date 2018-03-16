@@ -1,47 +1,38 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 
 using namespace cv;
 using namespace std;
 
-int main()
-{
-    Mat image = imread("../pictures/girl.png", CV_BGR2GRAY);
+int main() {
+    Mat sourceImage = imread("../pictures/camaro.png", CV_LOAD_IMAGE_GRAYSCALE);
 
-    Mat destinationImage;
-    Mat box;
-    Mat median;
-    Mat src;
-    image(Rect(Point(100, 0), Point(600, 400))).copyTo(src);
-    src.copyTo(destinationImage);
-    src.copyTo(box);
-    src.copyTo(median);
+    Mat linearFilterExample;
+    Mat boxFilterExample;
+    Mat medianBlurExample;
 
-    /// Initialize arguments for the filter
-    Point anchor = Point( 0, 0 );
+    Point anchor = Point(0, 0);
     double delta = 0;
-    int ddepth = -1;
+    int depth = -1;
 
-    /// Loop - Will filter the image with different kernel sizes each 0.5 seconds
-    int ind = 0;
+    Mat kernel = Mat(1, 2, CV_32F);
 
-    /// Update kernel size for a normalized box filter
-    Mat kernel = Mat::ones( 1, 2, CV_32F );
+    kernel.at<float>(0, 0) = -0.5f;
+    kernel.at<float>(0, 1) = 0.5f;
 
-    kernel.at<float>(0, 0) = -0.5;
-    kernel.at<float>(0, 1) = 0.5;
+    filter2D(sourceImage, linearFilterExample, depth, kernel, anchor, delta, BORDER_DEFAULT);
+    boxFilter(sourceImage, boxFilterExample, 0, Size(3, 3));
+    medianBlur(sourceImage, medianBlurExample, 9);
 
-    filter2D(destinationImage, destinationImage, ddepth, kernel, anchor, delta, BORDER_DEFAULT );
-    boxFilter(src, box, 0, Size(3, 3));
-    medianBlur(src, median, 9);
+    Mat combinedImages(sourceImage.rows * 2, sourceImage.cols * 2, CV_8UC1);
 
+    sourceImage.copyTo(combinedImages(Rect(0, 0, sourceImage.cols, sourceImage.rows)));
+    boxFilterExample.copyTo(combinedImages(Rect(sourceImage.cols, 0, sourceImage.cols, sourceImage.rows)));
+    linearFilterExample.copyTo(combinedImages(Rect(0, sourceImage.rows - 1, sourceImage.cols, sourceImage.rows)));
+    medianBlurExample.copyTo(
+            combinedImages(Rect(sourceImage.cols, sourceImage.rows, sourceImage.cols, sourceImage.rows)));
 
-    imshow("Source", src);
-    imshow("Processed", destinationImage);
-    imshow("Box", box);
-    imshow("Median", median);
+    imshow("Lab 4 Filters", combinedImages);
 
     waitKey(0);
 

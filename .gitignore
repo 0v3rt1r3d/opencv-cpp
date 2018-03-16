@@ -1,12 +1,14 @@
 # QtCreator project files
 CMakeLists.txt.user
 
+# Idea files
+.idea
+
 # Cmake files
 **/CMakeFiles
 **/CMakeCache.txt
 **/Makefile
 *.cmake
-
 
 # Vim cache
 *.un~
@@ -14,5 +16,7 @@ CMakeLists.txt.user
 
 # Build
 build
-bin.unix64.gcc/
+bin.unix64.gcc
+bin.unix64.gcc.dbg
+*.cbp
 
