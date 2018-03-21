@@ -7,7 +7,9 @@ using namespace std;
 int main() {
     Mat sourceImage = imread("../pictures/camaro.png", CV_LOAD_IMAGE_GRAYSCALE);
 
+
     Mat linearFilterExample;
+    Mat linearFilterEqualized;
     Mat boxFilterExample;
     Mat medianBlurExample;
 
@@ -21,6 +23,8 @@ int main() {
     kernel.at<float>(0, 1) = 0.5f;
 
     filter2D(sourceImage, linearFilterExample, depth, kernel, anchor, delta, BORDER_DEFAULT);
+    equalizeHist(linearFilterExample, linearFilterEqualized);
+
     boxFilter(sourceImage, boxFilterExample, 0, Size(3, 3));
     medianBlur(sourceImage, medianBlurExample, 9);
 
@@ -28,7 +32,7 @@ int main() {
 
     sourceImage.copyTo(combinedImages(Rect(0, 0, sourceImage.cols, sourceImage.rows)));
     boxFilterExample.copyTo(combinedImages(Rect(sourceImage.cols, 0, sourceImage.cols, sourceImage.rows)));
-    linearFilterExample.copyTo(combinedImages(Rect(0, sourceImage.rows - 1, sourceImage.cols, sourceImage.rows)));
+    linearFilterEqualized.copyTo(combinedImages(Rect(0, sourceImage.rows - 1, sourceImage.cols, sourceImage.rows)));
     medianBlurExample.copyTo(
             combinedImages(Rect(sourceImage.cols, sourceImage.rows, sourceImage.cols, sourceImage.rows)));
 

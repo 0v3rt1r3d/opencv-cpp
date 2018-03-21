@@ -25,7 +25,7 @@ The goal of this lab is to create contrast correction for the image by clipping 
 The goal of this lab is to try different filters. On the picture below:
 - The top left image is original in grayscale
 - The top right image is an example of box filter with kernel 3x3
-- The bottom left image is an example of applying linear filter with kernel [-0.5, 0.5] which determinies vertical edges of objects
+- The bottom left image is an example of applying linear filter with kernel [-0.5, 0.5] and equalization, which determinies vertical edges of objects
 - The bottom right image is an example of median blur
 
 ![lab4](pictures/lab4.png)
