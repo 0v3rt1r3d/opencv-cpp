@@ -29,3 +29,16 @@ The goal of this lab is to try different filters. On the picture below:
 - The bottom right image is an example of median blur
 
 ![lab4](pictures/lab4.png)
+
+## Lab 5 Test
+The is a test work. First step is to create a grayscale image with all combinations of circle, rect and triangle with different colors and background.
+
+![lab5_step1](pictures/lab5_source.png)
+
+The second step is to calculate derivatives in all directions of the precious image. On the image below all four derivatives are combined.
+
+![lab5_step1](pictures/lab5_derivatives.png)
+
+The third part is to create a colored picture, where absolute value of gradient is presented in value channel in HSV and two other channels are any two derivatives.
+
+![lab5_step1](pictures/lab5_result.png)

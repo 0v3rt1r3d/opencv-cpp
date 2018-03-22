@@ -64,5 +64,6 @@ add_subdirectory(lab1_sinusoidal_circles)
 add_subdirectory(lab2_brightness_range)
 add_subdirectory(lab3_contrast_correction)
 add_subdirectory(lab4_filters)
+add_subdirectory(lab5_test)
 add_subdirectory(individual_task)
 
