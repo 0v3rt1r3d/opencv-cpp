@@ -163,11 +163,11 @@ int main() {
     derivativeRight.copyTo(allDerivatives(Rect(0, image.rows, image.cols, image.rows)));
     derivativeDown.copyTo(allDerivatives(Rect(image.cols, image.rows, image.cols, image.rows)));
 
-    Mat absoluteGradient = (derivativeUp + derivativeDown + derivativeLeft + derivativeRight) / 4;
+    Mat absoluteGradient = (derivativeUp + derivativeDown + derivativeLeft + derivativeRight);
     Mat result = convert(merge(derivativeUp, derivativeRight, absoluteGradient), CV_HSV2BGR);
 
     imshow("Derivatives", allDerivatives);
-    imshow("Gradient", absoluteGradient);
+    imshow("Absolute gradient", absoluteGradient);
     imshow("Result", result);
 
     waitKey(0);
