@@ -102,27 +102,21 @@ Mat getPictureWithDifferentFigures() {
 }
 
 Mat getKernel() {
-    Mat kernel(3, 3, CV_32S);
+    Mat kernel(3, 3, CV_32FC1);
 
-    kernel.at<int>(0, 0) = 1;
-    kernel.at<int>(1, 0) = 1;
-    kernel.at<int>(2, 0) = 1;
+    kernel.at<float>(0, 0) = 1;
+    kernel.at<float>(1, 0) = 1;
+    kernel.at<float>(2, 0) = 1;
 
-    kernel.at<int>(0, 1) = 0;
-    kernel.at<int>(1, 1) = 0;
-    kernel.at<int>(2, 1) = 0;
+    kernel.at<float>(0, 1) = 0;
+    kernel.at<float>(1, 1) = 0;
+    kernel.at<float>(2, 1) = 0;
 
-    kernel.at<int>(0, 2) = -1;
-    kernel.at<int>(1, 2) = -1;
-    kernel.at<int>(2, 2) = -1;
+    kernel.at<float>(0, 2) = -1;
+    kernel.at<float>(1, 2) = -1;
+    kernel.at<float>(2, 2) = -1;
 
     return kernel;
-}
-
-Mat flip(const Mat &mat) {
-    Mat flipped;
-    flip(mat, flipped, 1);
-    return flipped;
 }
 
 Mat filter(const Mat &mat, const Mat &kernel) {
@@ -139,35 +133,50 @@ Mat merge(const Mat &mat1, const Mat &mat2, const Mat &mat3) {
     return result;
 }
 
-Mat convert(const Mat &mat, int cv_type) {
+Mat convertColor(const Mat &mat, int cv_type) {
     Mat converted;
     cvtColor(mat, converted, cv_type);
     return converted;
 }
 
+Mat convert(const Mat &mat, int cv_type) {
+    Mat converted;
+    mat.convertTo(converted, cv_type);
+    return converted;
+}
+
 int main() {
     Mat image = getPictureWithDifferentFigures();
-    Mat allDerivatives(image.rows * 2, image.cols * 2, image.type());
-
     imshow("Source image", image);
 
+    Mat source = convert(image, CV_32FC3);
     Mat kernel = getKernel();
 
-    Mat derivativeLeft = filter(image, kernel);
-    Mat derivativeRight = filter(image, flip(kernel));
-    Mat derivativeUp = filter(image, kernel.t());
-    Mat derivativeDown = filter(image, flip(kernel).t());
+    Mat der_h = filter(source, kernel);
+    Mat der_v = filter(source, kernel.t());
 
-    derivativeLeft.copyTo(allDerivatives(Rect(0, 0, image.cols, image.rows)));
-    derivativeUp.copyTo(allDerivatives(Rect(image.cols, 0, image.cols, image.rows)));
-    derivativeRight.copyTo(allDerivatives(Rect(0, image.rows, image.cols, image.rows)));
-    derivativeDown.copyTo(allDerivatives(Rect(image.cols, image.rows, image.cols, image.rows)));
+    Mat der_v_sqare(source.rows, source.cols, CV_32FC1);
+    Mat der_h_sqare(source.rows, source.cols, CV_32FC1);
 
-    Mat absoluteGradient = (derivativeUp + derivativeDown + derivativeLeft + derivativeRight);
-    Mat result = convert(merge(derivativeUp, derivativeRight, absoluteGradient), CV_HSV2BGR);
+    pow(der_v, 2, der_v_sqare);
+    pow(der_h, 2, der_h_sqare);
 
-    imshow("Derivatives", allDerivatives);
-    imshow("Absolute gradient", absoluteGradient);
+    Mat temp = der_h_sqare + der_v_sqare;
+
+    Mat absoluteGradient(source.rows, source.cols, CV_32FC1);
+    pow(temp, 0.5, absoluteGradient);
+
+
+    Mat gradient = convert(absoluteGradient, CV_8UC1);
+
+    Mat der_v_uchar = convert(der_v, CV_8UC1);
+    Mat der_h_uchar = convert(der_h, CV_8UC1);
+
+    Mat result = convertColor(merge(der_v_uchar, der_h_uchar, gradient), CV_HSV2BGR);
+
+    imshow("Absolute gradient", gradient);
+    imwrite("/home/overtired/Desktop/lab5_gradient.png",gradient);
+
     imshow("Result", result);
 
     waitKey(0);

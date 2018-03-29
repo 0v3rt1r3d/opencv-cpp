@@ -35,9 +35,9 @@ This lab is a test work. First step is to create a grayscale image with all comb
 
 ![lab5_step1](pictures/lab5_source.png)
 
-The second step is to calculate derivatives at all directions of the previous image. On the image below all four derivatives are combined.
+The second step is to calculate derivatives at both directions and gradient from them. On the image below you can see the gotten gradient.
 
-![lab5_step1](pictures/lab5_derivatives.png)
+![lab5_step1](pictures/lab5_gradient.png)
 
 The third part is to create a colored picture, where absolute value of gradient is presented in value channel in HSV and two other channels are any two derivatives.
 
