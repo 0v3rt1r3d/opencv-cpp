@@ -1,47 +1,40 @@
 #include <iostream>
+#include <string>
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
 using namespace std;
 
+Mat detecRain(string &path) {
+    Mat raw = imread(path, IMREAD_COLOR);
+    Mat source = imread(path, IMREAD_COLOR);
+//    resize(raw,source,Size(raw.cols/2,raw.rows/2));
+
+
+    Mat result(source.rows, source.cols, CV_8UC3);
+
+    source.copyTo(result(Rect(0, 0, source.cols, source.rows)));
+
+    Mat sourceInHSV;
+    cvtColor(source, sourceInHSV, CV_BGR2HSV);
+
+    vector<Mat> channels;
+    split(sourceInHSV, channels);
+
+    Mat filtredV = channels[2] > 220;
+//    filtredV.copyTo(result(Rect(source.cols, 0, source.cols, source.rows)));
+
+    imshow("FILTRED", filtredV);
+
+    return result;
+}
+
 int main() {
+    string pathToImage = "../gruzintsev_a_s/individual_task/night-rain/000002.jpg";
+    Mat detected = detecRain(pathToImage);
 
-
-    Mat sourceImage;
-    Mat linearFilterExample;
-    Mat linearFilterEqualized;
-    Mat boxFilterExample;
-    Mat medianBlurExample;
-
-    Mat input = imread("../pictures/xp-couples.jpg", CV_LOAD_IMAGE_GRAYSCALE);
-    resize(input, sourceImage, Size(input.cols / 2, input.rows / 2));
-
-    Point anchor = Point(0, 0);
-    double delta = 0;
-    int depth = -1;
-
-    Mat kernel = Mat(1, 2, CV_32F);
-
-    kernel.at<float>(0, 0) = -0.5f;
-    kernel.at<float>(0, 1) = 0.5f;
-
-    filter2D(sourceImage, linearFilterExample, depth, kernel, anchor, delta, BORDER_DEFAULT);
-    equalizeHist(linearFilterExample, linearFilterEqualized);
-
-    boxFilter(sourceImage, boxFilterExample, 0, Size(3, 3));
-    medianBlur(sourceImage, medianBlurExample, 9);
-
-    Mat combinedImages(sourceImage.rows * 2, sourceImage.cols * 2, CV_8UC1);
-
-    sourceImage.copyTo(combinedImages(Rect(0, 0, sourceImage.cols, sourceImage.rows)));
-    boxFilterExample.copyTo(combinedImages(Rect(sourceImage.cols, 0, sourceImage.cols, sourceImage.rows)));
-    linearFilterEqualized.copyTo(combinedImages(Rect(0, sourceImage.rows - 1, sourceImage.cols, sourceImage.rows)));
-    medianBlurExample.copyTo(
-            combinedImages(Rect(sourceImage.cols, sourceImage.rows, sourceImage.cols, sourceImage.rows)));
-
-    imshow("Lab 4 Filters", combinedImages);
+    imshow("RESULT", detected);
 
     waitKey(0);
-
     return 0;
 }
