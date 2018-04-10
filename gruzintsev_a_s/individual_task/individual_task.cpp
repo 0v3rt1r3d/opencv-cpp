@@ -1,6 +1,6 @@
 #include <iostream>
-#include <string>
 #include <opencv2/opencv.hpp>
+#include <Poco/Glob.h>
 
 using namespace cv;
 using namespace std;
@@ -8,7 +8,7 @@ using namespace std;
 Mat detecRain(string &path) {
     Mat raw = imread(path, IMREAD_COLOR);
     Mat source = imread(path, IMREAD_COLOR);
-//    resize(raw,source,Size(raw.cols/2,raw.rows/2));
+    resize(raw, source, Size(raw.cols / 2, raw.rows / 2));
 
 
     Mat result(source.rows, source.cols, CV_8UC3);
@@ -29,12 +29,59 @@ Mat detecRain(string &path) {
     return result;
 }
 
+class MethodTester {
+public:
+    static void testOnNightRain() {
+        auto paths = nightRainPaths();
+        test(paths);
+    }
+
+    static void testOnOther() {
+        auto paths = otherPaths();
+        test(paths);
+    }
+
+private:
+    static const int SPACE_BAR = 32;
+
+    static set<string> nightRainPaths() {
+        set<string> paths;
+        Poco::Glob::glob("../gruzintsev_a_s/individual_task/night-rain/*.jpg", paths);
+        return paths;
+    }
+
+    static set<string> otherPaths() {
+        set<string> paths;
+        Poco::Glob::glob("../gruzintsev_a_s/individual_task/other/*.jpg", paths);
+        return paths;
+    }
+
+private:
+    static void test(set<string> &paths) {
+        for (int i = 0; i < paths.size(); i++) {
+            set<string>::iterator it = paths.begin();
+            advance(it, i);
+            string path = *it;
+
+            cout << "[PATH:] " << path << endl;
+
+            Mat detected = detecRain(path);
+            imshow("RESULT", detected);
+
+            while (true) {
+                if (waitKey(0) == SPACE_BAR) {
+                    break;
+                }
+            }
+
+        }
+    }
+};
+
+
 int main() {
-    string pathToImage = "../gruzintsev_a_s/individual_task/night-rain/000002.jpg";
-    Mat detected = detecRain(pathToImage);
+    MethodTester::testOnNightRain();
+    MethodTester::testOnOther();
 
-    imshow("RESULT", detected);
-
-    waitKey(0);
     return 0;
 }
