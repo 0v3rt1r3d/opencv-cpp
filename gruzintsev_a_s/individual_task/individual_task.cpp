@@ -10,6 +10,12 @@ private:
     static constexpr double NIGHT_UP_THRESHOLD = 0.3;
     static constexpr double NIGHT_TOP_PART = 0.3;
     static constexpr float SCALE_KOEF = 0.6;
+    static constexpr int BRIGHTNESS_RANGE_TOP = 220;
+    static constexpr int SATURATION_RANGE_BOTTOM = 50;
+    static constexpr int SATURATION_RANGE_TOP = 200;
+
+    static constexpr int HUE_RANGE_TOP = 170;
+    static constexpr int HUE_RANGE_BOTTOM = 20;
 
 
 public:
@@ -30,19 +36,17 @@ public:
         vector<Mat> channels;
         split(sourceInHSV, channels);
 
+        Mat bluredImage;
 
-        cout << isNight(channels[2]) << endl;
+//        cout << isNight(channels[2]) << endl;
 
-        filterWithCustomKernel(channels[2]);
+//        filterWithCustomKernel(channels[2]);
+        filterChannels(sourceInHSV);
 
-//        Mat filteredV = channels[2] > 220;
-
-//        imshow("FILTERED", filteredV);
         imshow("RESULT", result);
     }
 
 private:
-
     static void filterWithCustomKernel(Mat &mat) {
         Mat filtered1;
         Mat filtered2;
@@ -54,9 +58,75 @@ private:
         filter2D(mat, filtered1, SAME_DEPTH, customKernel(), center);
 //        filter2D(mat, filtered2, SAME_DEPTH, customKernel(), center);
 
-
-
         imshow("Custom filter", filtered1);
+    }
+
+    static Mat horizontalDerivative(Mat &mat) {
+        Mat result(mat.rows, mat.cols * 3, CV_8UC1);
+        vector<Mat> channels;
+        split(mat, channels);
+
+        Mat kernel = horizontalDerivativeKernel();
+        Mat derivative;
+
+        int SAME_DEPTH = -1;
+        Point center = Point(-1, -1);
+
+        Mat blured;
+        medianBlur(channels[2], blured, 7);
+
+        filter2D(blured, derivative, SAME_DEPTH, kernel, center);
+
+        Mat normalizedDerivative;
+        Mat derivativeSquare;
+        pow(derivative, 2, derivativeSquare);
+        derivativeSquare.convertTo(normalizedDerivative, CV_8UC1);
+
+        return normalizedDerivative;
+    }
+
+
+    static void filterChannels(Mat &mat) {
+//        Mat result(mat.rows, mat.cols * 3, CV_8UC1);
+
+        vector<Mat> channels;
+        split(mat, channels);
+
+
+        Mat ranged1 = channels[2] > BRIGHTNESS_RANGE_TOP;
+        Mat ranged2 = channels[1] < SATURATION_RANGE_BOTTOM | channels[1] > SATURATION_RANGE_TOP;
+//        Mat ranged3 = channels[0] < HUE_RANGE_BOTTOM | channels[0] > HUE_RANGE_TOP;
+
+//        ranged1.copyTo(result(Rect(0, 0, mat.cols, mat.rows)));
+//        ranged2.copyTo(result(Rect(mat.cols, 0, mat.cols, mat.rows)));
+//        ranged3.copyTo(result(Rect(2 * mat.cols, 0, mat.cols, mat.rows)));
+//
+//        line(result, Point(mat.cols, 0), Point(mat.cols, mat.rows), Scalar(255), 4);
+
+        Mat derivative = horizontalDerivative(mat);
+
+        Mat combined = ranged2 & derivative;
+
+        imshow("Derivative", derivative);
+        imshow("Combined", combined);
+    }
+
+    static Mat horizontalDerivativeKernel() {
+        Mat kernel(3, 3, CV_32FC1);
+
+        kernel.at<float>(0, 0) = 1;
+        kernel.at<float>(1, 0) = 1;
+        kernel.at<float>(2, 0) = 1;
+
+        kernel.at<float>(0, 1) = 0;
+        kernel.at<float>(1, 1) = 0;
+        kernel.at<float>(2, 1) = 0;
+
+        kernel.at<float>(0, 2) = -1;
+        kernel.at<float>(1, 2) = -1;
+        kernel.at<float>(2, 2) = -1;
+
+        return kernel;
     }
 
     static Mat customKernel() {
@@ -91,7 +161,7 @@ private:
         split(mat, channels);
 
         for (int i = 0; i < 3; i++) {
-            channels[i].copyTo(result(Rect(i * mat.cols, 0, mat.cols, mat.rows)));
+            channels[i].copyTo(result(Rect(mat.cols * i, 0, mat.cols, mat.rows)));
         }
 
         imshow("Channels", result);
