@@ -6,7 +6,7 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 
-add_executable(individual_task.bin individual_task.cpp)
+add_executable(individual_task.bin main.cpp NightRainDetector.cpp NightRainDetector.h NightRainDetectorTester.cpp NightRainDetectorTester.h)
 
 target_link_libraries(individual_task.bin ${OpenCV_LIBS} PocoFoundation )
 
