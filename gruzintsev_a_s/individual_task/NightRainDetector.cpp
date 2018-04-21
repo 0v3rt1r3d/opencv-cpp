@@ -3,7 +3,7 @@
 using namespace std;
 using namespace cv;
 
-void NightRainDetector::detect(string path) {
+bool NightRainDetector::detect(string path, bool showPictures) {
     Mat raw = imread(path, cv::IMREAD_COLOR);
 
     Mat source = raw.clone();
@@ -21,6 +21,8 @@ void NightRainDetector::detect(string path) {
 
     Mat gammaCorrected = applyGammaCorrection(channels[2]);
 //    imshow("Gamma correction", gammaCorrected);
+
+    bool answer;
 
     if (isNight(gammaCorrected)) {
         cout << " night";
@@ -43,13 +45,16 @@ void NightRainDetector::detect(string path) {
         auto contours = findLights(thresholded);
         drawLightsRects(result, contours);
 
-        checkBlinksBelowRects(gammaCorrected, contours);
-        imshow("Threashholded", gammaCorrected);
+        answer = checkBlinksBelowRects(gammaCorrected, contours);
+        if(showPictures) imshow("Threashholded", gammaCorrected);
     } else {
         cout << " " << false << endl;
+        answer = false;
     }
 
-    imshow("RESULT", result);
+    if (showPictures)imshow("RESULT", result);
+
+    return answer;
 }
 
 void NightRainDetector::filterWithCustomKernel(cv::Mat &mat) {
@@ -252,7 +257,7 @@ void NightRainDetector::drawLightsRects(Mat &threeChannelsMat, vector<Rect> &con
     }
 }
 
-void NightRainDetector::checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects) {
+bool NightRainDetector::checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects) {
     bool almostOne = false;
 
     Mat filtered = oneChannelMat > 180;
@@ -275,4 +280,6 @@ void NightRainDetector::checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vecto
     }
 
     cout << " " << almostOne << endl;
+
+    return almostOne;
 }

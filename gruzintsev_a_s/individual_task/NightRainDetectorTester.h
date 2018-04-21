@@ -9,10 +9,10 @@ private:
     static const int SPACE_BAR = 32;
 
 public:
-    void testByGlob(std::string &pathGlob);
+    void testByGlob(std::string &pathGlob, bool makeBreaks);
 
 private:
-    void test(std::set<std::string> &paths);
+    void test(std::set<std::string> &paths, bool makeBreaks);
 };
 
 

@@ -9,7 +9,7 @@
 class NightRainDetector {
 
 private:
-    static constexpr double NIGHT_UP_THRESHOLD = 0.1;
+    static constexpr double NIGHT_UP_THRESHOLD = 0.08;
     static constexpr double NIGHT_TOP_PART = 0.3;
 
     static constexpr float SCALE_KOEF = 0.7;
@@ -23,7 +23,7 @@ private:
 
 
 public:
-    void detect(std::string path);
+    bool detect(std::string path, bool showPictures);
 
 private:
     void filterWithCustomKernel(cv::Mat &mat);
@@ -44,7 +44,7 @@ private:
 
     void drawLightsRects(cv::Mat &threeChannelsMat, std::vector<cv::Rect> &contours);
 
-    void checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects);
+    bool checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects);
 
     void showChannels(std::vector<cv::Mat> &channels);
 
