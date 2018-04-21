@@ -10,7 +10,6 @@ int main() {
 
     tester.testByGlob(pathToNight);
     tester.testByGlob(pathToOther);
-
 //    transform()
 
     return EXIT_SUCCESS;

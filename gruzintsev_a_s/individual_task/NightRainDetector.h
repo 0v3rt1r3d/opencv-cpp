@@ -9,10 +9,10 @@
 class NightRainDetector {
 
 private:
-    static constexpr double NIGHT_UP_THRESHOLD = 0.3;
+    static constexpr double NIGHT_UP_THRESHOLD = 0.1;
     static constexpr double NIGHT_TOP_PART = 0.3;
 
-    static constexpr float SCALE_KOEF = 0.6;
+    static constexpr float SCALE_KOEF = 0.7;
 
     static constexpr int BRIGHTNESS_RANGE_TOP = 250;
     static constexpr int SATURATION_RANGE_BOTTOM = 50;
@@ -36,16 +36,22 @@ private:
 
     cv::Mat customKernel();
 
-    cv::Mat applyGammaCorrection(cv::Mat& source);
+    cv::Mat applyGammaCorrection(cv::Mat &source);
 
-    std::vector<cv::Mat> splitToChannels(cv::Mat& mat);
+    std::vector<cv::Mat> splitToChannels(cv::Mat &mat);
+
+    std::vector<cv::Rect> findLights(cv::Mat &mat);
+
+    void drawLightsRects(cv::Mat &threeChannelsMat, std::vector<cv::Rect> &contours);
+
+    void checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects);
 
     void showChannels(std::vector<cv::Mat> &channels);
 
     bool isNight(cv::Mat &mat);
 
 private:
-    cv::Mat apply(cv::Mat &mat, std::function<void(cv::Mat&, cv::Mat&)> lambda) {
+    cv::Mat apply(cv::Mat &mat, std::function<void(cv::Mat &, cv::Mat &)> lambda) {
         cv::Mat processed;
         lambda(mat, processed);
         return processed;

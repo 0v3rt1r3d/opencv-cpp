@@ -4,31 +4,50 @@ using namespace std;
 using namespace cv;
 
 void NightRainDetector::detect(string path) {
-    Mat raw = cv::imread(path, cv::IMREAD_COLOR);
-    Mat source = cv::imread(path, cv::IMREAD_COLOR);
+    Mat raw = imread(path, cv::IMREAD_COLOR);
+
+    Mat source = raw.clone();
     resize(raw, source, cv::Size(int(raw.cols * SCALE_KOEF), int(raw.rows * SCALE_KOEF)));
 
-    cv::Mat result(source.rows, source.cols, CV_8UC3);
+    Mat result(source.rows, source.cols, CV_8UC3);
 
     source.copyTo(result(cv::Rect(0, 0, source.cols, source.rows)));
 
-    cv::Mat sourceInHSV;
+    Mat sourceInHSV;
     cvtColor(source, sourceInHSV, CV_BGR2HSV);
 
     auto channels = splitToChannels(sourceInHSV);
 //    showChannels(channels);
 
     Mat gammaCorrected = applyGammaCorrection(channels[2]);
-    imshow("Gamma correction", gammaCorrected);
+//    imshow("Gamma correction", gammaCorrected);
 
-    cv::Mat bluredImage = apply(gammaCorrected, [](Mat &source, Mat &processed) {
-        medianBlur(source, processed, 7);
-    });
-    imshow("Blured", bluredImage);
+    if (isNight(gammaCorrected)) {
+        cout << " night";
 
-    Mat thresholded = gammaCorrected > 250;
-    imshow("Threashholded", thresholded);
+        Mat bluredImage = apply(gammaCorrected, [](Mat &source, Mat &processed) {
+            medianBlur(source, processed, 7);
+        });
+//    imshow("Blured", bluredImage);
 
+        Mat morphologed = apply(bluredImage, [](Mat &source, Mat &processed) {
+            auto kernel = Mat::ones(5, 5, CV_8UC1);
+            morphologyEx(source, processed, MORPH_OPEN, kernel);
+        });
+//    imshow("Morphologed", morphologed);
+
+        Mat thresholded = morphologed > 200;
+
+
+//    Mat colored(raw.size(), CV_8UC3);
+        auto contours = findLights(thresholded);
+        drawLightsRects(result, contours);
+
+        checkBlinksBelowRects(gammaCorrected, contours);
+        imshow("Threashholded", gammaCorrected);
+    } else {
+        cout << " " << false << endl;
+    }
 
     imshow("RESULT", result);
 }
@@ -69,7 +88,6 @@ cv::Mat NightRainDetector::horizontalDerivative(cv::Mat &mat) {
     cv::Mat kernel2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 4), cv::Point(-1, -1));
 
     morphologyEx(normalizedDerivative, morphologed, cv::MORPH_OPEN, kernel2);
-
 
     return morphologed;
 }
@@ -143,7 +161,7 @@ Mat NightRainDetector::customKernel() {
 }
 
 bool NightRainDetector::isNight(Mat &mat) {
-    Mat topHalfOfSource = mat(Rect(0, 0, mat.cols, int(mat.cols * NIGHT_TOP_PART)));
+    Mat topHalfOfSource = mat;//(Rect(0, 0, mat.cols, int(mat.cols * NIGHT_TOP_PART)));
 
     int maxValue = 255;
     float range[] = {0.0, (float) maxValue};
@@ -186,7 +204,7 @@ void NightRainDetector::showChannels(std::vector<cv::Mat> &channels) {
     imshow("Channels", result);
 }
 
-cv::Mat NightRainDetector::applyGammaCorrection(cv::Mat &oneChannelImage) {
+Mat NightRainDetector::applyGammaCorrection(cv::Mat &oneChannelImage) {
     Mat lookUpTable(1, 256, CV_8U);
     uchar *p = lookUpTable.ptr();
     for (int i = 0; i < 256; ++i)
@@ -195,4 +213,66 @@ cv::Mat NightRainDetector::applyGammaCorrection(cv::Mat &oneChannelImage) {
     LUT(oneChannelImage, lookUpTable, result);
 
     return result;
+}
+
+
+vector<Rect> NightRainDetector::findLights(Mat &mat) {
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+
+    findContours(mat, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+    vector<Rect> rects;
+
+    for (auto points :contours) {
+        Rect rect = boundingRect(points);
+        double minWidth = min(rect.height, rect.width);
+        double maxWidth = max(rect.height, rect.width);
+        double proportion = min(rect.height * 1.0 / rect.width, rect.width * 1.0 / rect.height);
+
+//        cout << " -> Next rect <- " << endl;
+//        cout << "Proportion: " << proportion << endl;
+//        cout << "Min width: " << minWidth << endl;
+//        cout << "Max width: " << maxWidth << endl;
+
+        if (rect.y > 0.25 * mat.rows && rect.y < 0.75 * mat.rows && proportion > 0.7 &&
+            minWidth > 0.009 * SCALE_KOEF * mat.cols &&
+            maxWidth < 0.1 * SCALE_KOEF * mat.cols) {
+            rects.push_back(rect);
+        }
+    }
+
+    return rects;
+}
+
+void NightRainDetector::drawLightsRects(Mat &threeChannelsMat, vector<Rect> &contours) {
+    for (int i = 0; i < contours.size(); i++) {
+        Scalar color = Scalar(0, 0, 255);
+        rectangle(threeChannelsMat, contours[i], color, 3);
+    }
+}
+
+void NightRainDetector::checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects) {
+    bool almostOne = false;
+
+    Mat filtered = oneChannelMat > 180;
+
+    for (Rect rect:rects) {
+
+        Rect areaToFind = Rect(rect.x, rect.y + rect.height, rect.width, oneChannelMat.rows - rect.y - rect.height);
+
+        vector<vector<Point> > contours;
+        vector<Vec4i> hierarchy;
+
+        Mat findAreaMat = filtered(areaToFind);
+
+        findContours(findAreaMat, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+        almostOne = almostOne || contours.size() > 0;
+
+        rectangle(oneChannelMat, areaToFind, Scalar(128), 2);
+        rectangle(oneChannelMat, areaToFind, Scalar(128), 2);
+    }
+
+    cout << " " << almostOne << endl;
 }

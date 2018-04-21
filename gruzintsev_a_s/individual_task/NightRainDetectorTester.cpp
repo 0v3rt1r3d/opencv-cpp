@@ -13,15 +13,15 @@ void NightRainDetectorTester::test(set<string> &paths) {
         advance(it, i);
         auto path = *it;
 
-        cout << "[PATH:] " << path << endl;
+        cout << "[PATH:] " << path;
 
         detector.detect(path);
 
-        while (true) {
-            if (cv::waitKey(0) == SPACE_BAR) {
-                break;
-            }
-        }
+//        while (true) {
+//            if (cv::waitKey(0) == SPACE_BAR) {
+//                break;
+//            }
+//        }
     }
 }
 
