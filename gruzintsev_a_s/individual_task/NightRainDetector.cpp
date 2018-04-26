@@ -6,53 +6,84 @@ using namespace cv;
 bool NightRainDetector::detect(string path, bool showPictures) {
     Mat raw = imread(path, cv::IMREAD_COLOR);
 
-    Mat source = raw.clone();
+    Mat source;
     resize(raw, source, cv::Size(int(raw.cols * SCALE_KOEF), int(raw.rows * SCALE_KOEF)));
 
-    Mat result(source.rows, source.cols, CV_8UC3);
-
-    source.copyTo(result(cv::Rect(0, 0, source.cols, source.rows)));
-
+    // There should be detection for night
     Mat sourceInHSV;
     cvtColor(source, sourceInHSV, CV_BGR2HSV);
 
-    auto channels = splitToChannels(sourceInHSV);
-//    showChannels(channels);
+    auto channels = splitToChannels(source);
+    bool night = isNight(channels[0]);
 
-    Mat gammaCorrected = applyGammaCorrection(channels[2]);
-//    imshow("Gamma correction", gammaCorrected);
+    Mat corrected = correctBrightness(channels[0]);
+    Mat overbrighted = corrected > 250;
 
-    bool answer;
+    if (showPictures)imshow("Source", source);
+//    if (showPictures)imshow("Brighness", channels[0]);
+//    if (showPictures)imshow("Corrected", corrected);
+//    if (showPictures)imshow("Ovebrighted", overbrighted);
 
-    if (isNight(gammaCorrected)) {
-        cout << " night";
+    showHist(corrected);
 
-        Mat bluredImage = apply(gammaCorrected, [](Mat &source, Mat &processed) {
-            medianBlur(source, processed, 7);
-        });
-//    imshow("Blured", bluredImage);
-
-        Mat morphologed = apply(bluredImage, [](Mat &source, Mat &processed) {
-            auto kernel = Mat::ones(5, 5, CV_8UC1);
-            morphologyEx(source, processed, MORPH_OPEN, kernel);
-        });
-//    imshow("Morphologed", morphologed);
-
-        Mat thresholded = morphologed > 200;
-
-
-//    Mat colored(raw.size(), CV_8UC3);
-        auto contours = findLights(thresholded);
-        drawLightsRects(result, contours);
-
-        answer = checkBlinksBelowRects(gammaCorrected, contours);
-        if(showPictures) imshow("Threashholded", gammaCorrected);
+    if (night) {
+        cout << " Night ";
     } else {
-        cout << " " << false << endl;
-        answer = false;
+        cout << " Day ";
     }
 
-    if (showPictures)imshow("RESULT", result);
+
+
+//    Mat cutted = raw(Rect(0, int(raw.rows * 2.0 / 10), raw.cols, int(raw.rows * 6.0 / 10)));
+//    Mat source;
+//
+//    resize(cutted, source, cv::Size(int(cutted.cols * SCALE_KOEF), int(cutted.rows * SCALE_KOEF)));
+//
+//    Mat result(source.rows, source.cols, CV_8UC3);
+//
+//    source.copyTo(result(cv::Rect(0, 0, source.cols, source.rows)));
+//
+//    Mat sourceInHSV;
+//    cvtColor(source, sourceInHSV, CV_BGR2HSV);
+//
+////    showChannels(channels);
+//
+//    Mat gammaCorrected = applyGammaCorrection(channels[2]);
+//    imshow("Gamma correction", gammaCorrected);
+
+    bool answer = false;
+
+//    if (isNight(gammaCorrected)) {
+//        cout << " night";
+//
+//        Mat bluredImage = apply(gammaCorrected, [](Mat &source, Mat &processed) {
+//            medianBlur(source, processed, 7);
+//        });
+////    imshow("Blured", bluredImage);
+//
+//        Mat morphologed = apply(bluredImage, [](Mat &source, Mat &processed) {
+//            auto kernel = Mat::ones(5, 5, CV_8UC1);
+//            morphologyEx(source, processed, MORPH_OPEN, kernel);
+//        });
+////    imshow("Morphologed", morphologed);
+//
+//        Mat thresholded = morphologed > 200;
+//
+//
+////    Mat colored(raw.size(), CV_8UC3);
+//        auto contours = findLights(thresholded);
+//        drawLightsRects(result, contours);
+//
+//        answer = checkBlinksBelowRects(gammaCorrected, contours);
+//        if (showPictures) imshow("Threashholded", gammaCorrected);
+//    } else {
+//        cout << " day " << false << endl;
+//        answer = false;
+//    }
+
+//    if (showPictures)imshow("RESULT", result);
+
+    cout << endl;
 
     return answer;
 }
@@ -166,7 +197,7 @@ Mat NightRainDetector::customKernel() {
 }
 
 bool NightRainDetector::isNight(Mat &mat) {
-    Mat topHalfOfSource = mat;//(Rect(0, 0, mat.cols, int(mat.cols * NIGHT_TOP_PART)));
+//    Mat topHalfOfSource = mat;//(Rect(0, 0, mat.cols, int(mat.cols * NIGHT_TOP_PART)));
 
     int maxValue = 255;
     float range[] = {0.0, (float) maxValue};
@@ -186,10 +217,13 @@ bool NightRainDetector::isNight(Mat &mat) {
     for (int i = 0; i <= maxValue - 1; i++) {
         if (distribution.at<float>(i) >= 0.5) {
             medianVal = i;
+            cout << " Median value: " << medianVal << " ";
+
             break;
         }
     }
-    return medianVal / maxValue < NIGHT_UP_THRESHOLD;
+//    return medianVal / maxValue < NIGHT_UP_THRESHOLD;
+    return medianVal < 60;
 }
 
 vector<Mat> NightRainDetector::splitToChannels(cv::Mat &mat) {
@@ -240,7 +274,7 @@ vector<Rect> NightRainDetector::findLights(Mat &mat) {
 //        cout << "Min width: " << minWidth << endl;
 //        cout << "Max width: " << maxWidth << endl;
 
-        if (rect.y > 0.25 * mat.rows && rect.y < 0.75 * mat.rows && proportion > 0.7 &&
+        if (mat.rows && proportion > 0.7 &&
             minWidth > 0.009 * SCALE_KOEF * mat.cols &&
             maxWidth < 0.1 * SCALE_KOEF * mat.cols) {
             rects.push_back(rect);
@@ -260,7 +294,7 @@ void NightRainDetector::drawLightsRects(Mat &threeChannelsMat, vector<Rect> &con
 bool NightRainDetector::checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects) {
     bool almostOne = false;
 
-    Mat filtered = oneChannelMat > 180;
+    Mat filtered = oneChannelMat > 200;
 
     for (Rect rect:rects) {
 
@@ -273,7 +307,15 @@ bool NightRainDetector::checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vecto
 
         findContours(findAreaMat, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
-        almostOne = almostOne || contours.size() > 0;
+        vector<Rect> highlightedRects;
+        for (auto points:contours) {
+            Rect boundingRect = cv::boundingRect(points);
+            if (boundingRect.area() > 100 * SCALE_KOEF) {
+                highlightedRects.push_back(boundingRect);
+            }
+        }
+
+        almostOne = almostOne || highlightedRects.size() > 0;
 
         rectangle(oneChannelMat, areaToFind, Scalar(128), 2);
         rectangle(oneChannelMat, areaToFind, Scalar(128), 2);
@@ -282,4 +324,90 @@ bool NightRainDetector::checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vecto
     cout << " " << almostOne << endl;
 
     return almostOne;
+}
+
+cv::Mat NightRainDetector::correctBrightness(cv::Mat brighnessChannel) {
+
+    Mat lookUpTable(1, 256, CV_8U);
+    uchar *p = lookUpTable.ptr();
+    Mat result = brighnessChannel.clone();
+
+    Mat hist;
+
+    int channels[] = {0};
+
+    float range_0[] = {0, 255};
+    const float *ranges[] = {range_0};
+
+    int hbins = 255;
+    int histSize[] = {hbins};
+
+    calcHist(&brighnessChannel, 1, channels, Mat(), hist, 1, histSize, ranges);
+
+
+    bool left = false;
+    bool right = false;
+
+    int quantileLeft = 0, quantileRight = 255;
+    float sumLeft = 0, sumRight = 0;
+
+    for (int i = 0; i < hist.size[0]; i++) {
+
+        if (!left && sumLeft / (brighnessChannel.size[0] * brighnessChannel.size[1]) < 0.01) {
+            sumLeft += hist.at<float>(i);
+            quantileLeft = i;
+        } else {
+            left = true;
+
+        }
+
+        if (!right && sumRight / (brighnessChannel.size[0] * brighnessChannel.size[1]) < 0.01) {
+            sumRight += hist.at<float>(hist.size[0] - 1 - i);
+            quantileRight = hist.size[0] - 1 - i;
+        } else {
+            right = true;
+        }
+    }
+
+    for (int i = 0; i < 256; ++i) {
+        if (i < quantileLeft) {
+            p[i] = (uchar) 0;
+        } else if (i > quantileRight) {
+            p[i] = (uchar) 255;
+        } else {
+            p[i] = (uchar) (255.0 / (quantileRight - quantileLeft) * (i - quantileLeft));
+        }
+    }
+
+    LUT(brighnessChannel, lookUpTable, result);
+
+    return result;
+}
+
+void NightRainDetector::showHist(cv::Mat oneChannel) {
+
+    // Initialize parameters
+    int histSize = 256;    // bin size
+    float range[] = {0, 255};
+    const float *ranges[] = {range};
+
+    // Calculate histogram
+    Mat hist;
+    calcHist(&oneChannel, 1, 0, Mat(), hist, 1, &histSize, ranges, true, false);
+
+    // Plot the histogram
+    int hist_w = 512;
+    int hist_h = 400;
+    int bin_w = cvRound((double) hist_w / histSize);
+
+    Mat histImage(hist_h, hist_w, CV_8UC1, Scalar(0, 0, 0));
+    normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
+
+    for (int i = 1; i < histSize; i++) {
+        line(histImage, Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
+             Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))),
+             Scalar(255, 0, 0), 2, 8, 0);
+    }
+
+    imshow("Hist", histImage);
 }

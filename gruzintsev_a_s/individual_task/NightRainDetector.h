@@ -9,7 +9,7 @@
 class NightRainDetector {
 
 private:
-    static constexpr double NIGHT_UP_THRESHOLD = 0.08;
+    static constexpr double NIGHT_UP_THRESHOLD = 0.1;
     static constexpr double NIGHT_TOP_PART = 0.3;
 
     static constexpr float SCALE_KOEF = 0.7;
@@ -48,7 +48,11 @@ private:
 
     void showChannels(std::vector<cv::Mat> &channels);
 
+    void showHist(cv::Mat oneChannel);
+
     bool isNight(cv::Mat &mat);
+
+    cv::Mat correctBrightness(cv::Mat brighnessChannel);
 
 private:
     cv::Mat apply(cv::Mat &mat, std::function<void(cv::Mat &, cv::Mat &)> lambda) {
