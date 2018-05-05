@@ -9,10 +9,10 @@
 class NightRainDetector {
 
 private:
-    static constexpr double NIGHT_UP_THRESHOLD = 0.1;
-    static constexpr double NIGHT_TOP_PART = 0.3;
+    static constexpr float NIGHT_UP_THRESHOLD = 0.1;
+    static constexpr float NIGHT_TOP_PART = 0.3;
 
-    static constexpr float SCALE_KOEF = 0.7;
+    static constexpr float SCALE_KOEF = 0.99;
 
     static constexpr int BRIGHTNESS_RANGE_TOP = 250;
     static constexpr int SATURATION_RANGE_BOTTOM = 50;
@@ -21,32 +21,18 @@ private:
     static constexpr int HUE_RANGE_TOP = 170;
     static constexpr int HUE_RANGE_BOTTOM = 20;
 
+    static constexpr float ADDITIONAL_WIDTH = 0.04;
+
 
 public:
     bool detect(std::string path, bool showPictures);
 
 private:
-    void filterWithCustomKernel(cv::Mat &mat);
-
-    cv::Mat horizontalDerivative(cv::Mat &mat);
-
-    cv::Mat verticalDerivative(cv::Mat &mat);
-
-    cv::Mat horizontalDerivativeKernel();
-
-    cv::Mat customKernel();
-
-    cv::Mat applyGammaCorrection(cv::Mat &source);
-
     std::vector<cv::Mat> splitToChannels(cv::Mat &mat);
 
     std::vector<cv::Rect> findLights(cv::Mat &mat);
 
-    void drawLightsRects(cv::Mat &threeChannelsMat, std::vector<cv::Rect> &contours);
-
-    bool checkBlinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects);
-
-    void showChannels(std::vector<cv::Mat> &channels);
+    std::vector<cv::Rect> blinksBelowRects(cv::Mat &oneChannelMat, std::vector<cv::Rect> &rects);
 
     void showHist(cv::Mat oneChannel);
 
