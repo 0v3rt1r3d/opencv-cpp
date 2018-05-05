@@ -18,16 +18,16 @@ bool NightRainDetector::detect(string path, bool showPictures) {
     bool night = isNight(channels[0]);
     bool answer = false;
 
+    if (showPictures){
+        imshow("Source", source);
+        showHist(channels[0]);
+    }
+
     if (night) {
         cout << " [Night]:";
 
         Mat corrected = correctBrightness(channels[0]);
         Mat overbrighted = corrected > 250;
-
-//        if (showPictures)imshow("Ovebrighted", overbrighted);
-//
-//        if (showPictures)imshow("Brightness", channels[0]);
-//        if (showPictures)imshow("Corrected", corrected);
 
         Mat onlyLights = corrected > 245;
         auto lights = findLights(onlyLights);
@@ -37,15 +37,13 @@ bool NightRainDetector::detect(string path, bool showPictures) {
         answer = blinks.size() > 0;
 
         if (answer) {
-            cout << "[TRUE]" << blinks.size();
+            cout << "[TRUE]";
         } else {
             cout << "[FALSE]";
         }
     } else {
         cout << " [Day]  :[FALSE]";
     }
-
-    if (showPictures)imshow("Source", source);
 
     cout << endl;
 
@@ -128,9 +126,7 @@ vector<Rect> NightRainDetector::blinksBelowRects(cv::Mat &oneChannelMat, std::ve
         }
 
         Mat area = oneChannelMat(Rect(areaToFind));
-        Mat blured = apply(area, [](Mat &input, Mat &output) { medianBlur(input, output, 19); });
-
-        imshow("Blured", blured);
+        Mat blured = apply(area, [](Mat &input, Mat &output) { medianBlur(input, output, 23); });
 
         Mat equalized = correctBrightness(blured);
         Mat ranged = equalized > 200;
@@ -146,8 +142,6 @@ vector<Rect> NightRainDetector::blinksBelowRects(cv::Mat &oneChannelMat, std::ve
                 if (rect1.width > areaToFind.width * 0.10 && rect1.height > 2 * rect1.width) {
                     blinks.push_back(rect1);
                     rectangle(ranged, boundingRect, Scalar(128), 2);
-
-                    imshow("Ranged", ranged);
                 }
             }
         }

@@ -7,13 +7,9 @@ int main() {
 
     string pathToNight = "../gruzintsev_a_s/individual_task/night-rain/*.jpg";
     string pathToOther = "../gruzintsev_a_s/individual_task/other/*.jpg";
-    string pathToTest = "../gruzintsev_a_s/individual_task/test/*.jpg";
 
-    tester.testByGlob(pathToNight, false);
-//    tester.testByGlob(str, true);
-    tester.testByGlob(pathToOther, false);
-//    tester.testByGlob(pathToTest, false);
-//    tester.testByGlob(pathToTest, true);
+    tester.testByGlob(pathToNight, true);
+    tester.testByGlob(pathToOther, true);
 
     return EXIT_SUCCESS;
 }

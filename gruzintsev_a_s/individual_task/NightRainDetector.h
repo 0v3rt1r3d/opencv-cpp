@@ -12,7 +12,7 @@ private:
     static constexpr float NIGHT_UP_THRESHOLD = 0.1;
     static constexpr float NIGHT_TOP_PART = 0.3;
 
-    static constexpr float SCALE_KOEF = 0.99;
+    static constexpr float SCALE_KOEF = 0.6;
 
     static constexpr int BRIGHTNESS_RANGE_TOP = 250;
     static constexpr int SATURATION_RANGE_BOTTOM = 50;
